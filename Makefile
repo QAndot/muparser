@@ -1,15 +1,15 @@
 CC	=	g++
 # debug version
-#CFLAGS  = -Wall -ggdb  
+#CFLAGS  = -Wall -ggdb
 # release version:
-CFLAGS	=	-O3 -ffast-math -fomit-frame-pointer 
+CFLAGS	=	-O3 -ffast-math -fomit-frame-pointer
 
 PATH_BIN = ./bin
 
 ########################################################################################################
 # muParser library sources
-PATH_LIB = ./parser
-PATH_OBJ = ./obj
+PATH_LIB = parser
+PATH_OBJ = obj
 LIB_SRC = mpError.cpp mpRPN.cpp mpICallback.cpp mpIValReader.cpp mpParserBase.cpp mpTokenReader.cpp\
           mpVariable.cpp mpIOprt.cpp mpIValue.cpp mpParser.cpp mpValReader.cpp mpFuncStr.cpp\
 		  mpFuncCommon.cpp mpFuncNonCmplx.cpp mpFuncCmplx.cpp mpIToken.cpp mpOprtCmplx.cpp \
@@ -18,18 +18,19 @@ LIB_SRC = mpError.cpp mpRPN.cpp mpICallback.cpp mpIValReader.cpp mpParserBase.cp
           mpPackageMatrix.cpp mpPackageUnit.cpp mpIfThenElse.cpp mpValueCache.cpp mpValue.cpp mpTest.cpp\
 		  mpScriptTokens.cpp mpFuncMatrix.cpp mpOprtIndex.cpp
 LIB_OBJ = ${LIB_SRC:.cpp=.o}
-NAME_LIB = libmuparserx.a
+NAME_LIB = bin/libmuparserx.a
+EXAMPLE_PATH=bin/example
 
 ########################################################################################################
 # example application
-PATH_SAMPLE = ./sample
+PATH_SAMPLE = sample
 
+all:	$(EXAMPLE_PATH)
 
-all:	example
+new:  clean $(EXAMPLE_PATH)
 
-new:  clean example
-
-$(NAME_LIB):	$(LIB_OBJ)
+#$(LIB_OBJ)
+$(NAME_LIB): $(LIB_OBJ:%.o=$(PATH_OBJ)/%.o)
 	@echo ""
 	@echo "#########################################################"
 	@echo "#                                                       #"
@@ -40,12 +41,14 @@ $(NAME_LIB):	$(LIB_OBJ)
 
 	ar ru $(NAME_LIB) $(LIB_OBJ:%.o=$(PATH_OBJ)/%.o)
 	ranlib $(NAME_LIB)
-	mv $(NAME_LIB) bin/
 
-$(LIB_OBJ):
-	$(CC) $(CFLAGS) -c $(PATH_LIB)/${@:.o=.cpp} -o $(PATH_OBJ)/$@
+#$(LIB_OBJ):
+$(LIB_OBJ:%.o=$(PATH_OBJ)/%.o):
+	$(CC) $(CFLAGS) -c $(subst $(PATH_OBJ),$(PATH_LIB),${@:.o=.cpp}) -o $@
 
-example:	$(NAME_LIB)
+#$(CC) $(CFLAGS) -c ${@:.o=.cpp} -o $@
+
+$(EXAMPLE_PATH): $(NAME_LIB)
 	@echo ""
 	@echo "#########################################################"
 	@echo "#                                                       #"
@@ -53,22 +56,20 @@ example:	$(NAME_LIB)
 	@echo "#                                                       #"
 	@echo "#########################################################"
 	@echo ""
-	$(CC) $(CFLAGS) -I$(PATH_LIB) -L$(PATH_BIN) -o $(PATH_BIN)/$@ $(PATH_SAMPLE)/example.cpp $(PATH_SAMPLE)/timer.cpp -lmuparserx -lm
+	$(CC) $(CFLAGS) -I$(PATH_LIB) -L$(PATH_BIN) -o $@ $(PATH_SAMPLE)/example.cpp $(PATH_SAMPLE)/timer.cpp -lmuparserx -lm
 
 clean:
-	#@clear
 	@echo "########################################################"
 	@echo "#                                                      #"
 	@echo "#  Cleaning up                                         #"
 	@echo "#                                                      #"
 	@echo "########################################################"
 	@echo ""
-	rm -rf *.o 
+	rm -rf *.o
 	rm -rf *~
-	rm -rf libmuparserx.a
 	rm -rf $(PATH_OBJ)/*
 	rm -rf $(PATH_BIN)/*
 
-new:	
+new:
 	$(MAKE) clean
 	$(MAKE) all
